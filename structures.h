@@ -25,11 +25,12 @@ struct Segment
 			(ptLeft.x == ptRight.x && ptLeft.y > ptRight.y))
 				std::swap(ptLeft, ptRight);
 	}
-	bool isAbove(Point pTarget, Point pGuide = Point())
+	bool isAbove(Point pTarget, Point pGuide)
 	{
+		float EPS = 0.1;
 		float det = this->detHelper(pTarget);
-		if (det != 0.0f) return det > 0;
-		return this->detHelper(pGuide) > 0;
+
+		return (fabsf(det) > EPS) ? det > 0 : this->detHelper(pGuide) > 0;
 	}
 	Point ptWithX(float x)
 	{
@@ -66,8 +67,8 @@ struct Trapezoid
 				 trLeftTop(nullptr), trLeftBot(nullptr),
 				 graphNode(nullptr){}
 
-	void setOneRight(Trapezoid* tp) {trRightTop = tp; trRightBot = 0;}
-	void setOneLeft(Trapezoid* tp) {trLeftTop = tp; trLeftBot = 0;}
+	void setOneRight(Trapezoid* tp) {trRightTop = tp; trRightBot = nullptr;}
+	void setOneLeft(Trapezoid* tp) {trLeftTop = tp; trLeftBot = nullptr;}
 
 	void changeLeftWith(Trapezoid* tp)
 	{
@@ -122,8 +123,8 @@ public:
 	GraphNode(): _left(nullptr), _right(nullptr) {}
 	virtual ~GraphNode() {}
 
-	virtual Trapezoid* 	getTrapezoid() 							{return nullptr;}
-	virtual GraphNode* 	nextNode(Point, Point extra = Point()) 	{(void)extra; return nullptr;}
+	virtual Trapezoid* 	getTrapezoid() 			{return nullptr;}
+	virtual GraphNode* 	nextNode(Point, Point) 	{return nullptr;}
 	
 	void attachLeft(GraphNode* node) 
 	{

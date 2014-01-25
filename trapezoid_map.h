@@ -22,7 +22,7 @@ public:
 
 private:
 	void 		addSegment(Segment* segment);
-	GraphNode* 	mapQuerry(Point pTarget, Point pExtra = Point());
+	GraphNode* 	mapQuery(Point pTarget, Point pExtra);
 
 	void 		simpleCase(GraphNode* tpNode, Segment* segment);
 	void		hardCase(GraphNode* pLeft, GraphNode* pRight, Segment* segment);

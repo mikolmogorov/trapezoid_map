@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
+import sys
 import scipy as sp
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 
-x_range = [-100, 100]
-y_range = [-100, 100]
+x_range = [-1000, 1000]
+y_range = [-1000, 1000]
 
-n_points = 100
+if len(sys.argv) < 2:
+    sys.stderr.write("Usage: generator.py num_points")
+n_points = int(sys.argv[1])
 points = []
 
 for i in xrange(n_points):

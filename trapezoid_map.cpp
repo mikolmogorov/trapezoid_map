@@ -11,13 +11,19 @@ TrapezoidMap::TrapezoidMap():
 
 TrapezoidMap::~TrapezoidMap()
 {
+	//std::cerr << "cleaning up\n";
 	this->clear();
+	//std::cerr << "done\n";
 }
 
 namespace
 {
+	std::unordered_set<GraphNode*> g_visited;
 	void recHelper(GraphNode* node, std::function<void(GraphNode*)> fun)
 	{
+		if (g_visited.find(node) != g_visited.end()) return;
+		g_visited.insert(node);
+
 		if (node->_left) recHelper(node->_left, fun);
 		if (node->_right) recHelper(node->_right, fun);
 		fun(node);
@@ -31,28 +37,32 @@ void TrapezoidMap::clear()
 	_segments.clear();
 	_mapReady = false;
 
-	std::set<GraphNode*> toDelete;
+	std::unordered_set<GraphNode*> toDelete;
 	auto f = [&toDelete](GraphNode* node){toDelete.insert(node);};
-	recHelper(_rootNode, f);
-	for (auto node : toDelete) delete node;
 
+	g_visited.clear();
+	recHelper(_rootNode, f);
+
+	for (auto node : toDelete) delete node;
 	_rootNode = nullptr;
 }
 
 void TrapezoidMap::getTrapezoids(std::vector<Trapezoid*>& tpzds)
 {
-	std::set<Trapezoid*> trapSet;
+	std::unordered_set<Trapezoid*> trapSet;
 
 	auto f = [&trapSet](GraphNode* node)
 	{
 		if (node->getTrapezoid()) 
 			trapSet.insert(node->getTrapezoid());
 	};
+
+	g_visited.clear();
 	recHelper(_rootNode, f);
 	std::copy(trapSet.begin(), trapSet.end(), std::back_inserter(tpzds));
 }
 
-GraphNode* TrapezoidMap::mapQuerry(Point pTarget, Point pExtra)
+GraphNode* TrapezoidMap::mapQuery(Point pTarget, Point pExtra)
 {
 	assert(_rootNode);
 	GraphNode* curNode = _rootNode;
@@ -65,7 +75,7 @@ GraphNode* TrapezoidMap::mapQuerry(Point pTarget, Point pExtra)
 
 const Trapezoid* TrapezoidMap::localize(Point pt)
 {
-	return this->mapQuerry(pt)->getTrapezoid();
+	return this->mapQuery(pt, pt)->getTrapezoid();
 }
 
 bool TrapezoidMap::validateSegments(std::vector<Segment>& segments)
@@ -117,8 +127,8 @@ void TrapezoidMap::buildMap(std::vector<Segment>& segments)
 
 void TrapezoidMap::addSegment(Segment* segment)
 {
-	GraphNode* node1 = this->mapQuerry(segment->ptLeft, segment->ptRight);
-	GraphNode* node2 = this->mapQuerry(segment->ptRight, segment->ptLeft);
+	GraphNode* node1 = this->mapQuery(segment->ptLeft, segment->ptRight);
+	GraphNode* node2 = this->mapQuery(segment->ptRight, segment->ptLeft);
 	Trapezoid* tp1 = node1->getTrapezoid();
 	Trapezoid* tp2 = node2->getTrapezoid();
 
