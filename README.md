@@ -17,7 +17,7 @@ The current version provides only an interface for benchmarking.
 Use the commands below to try it:
 
 	make
-	run_test.sh NUM_POINTS
+	./run_test.sh NUM_POINTS
 
 You will need the second version of python and the following
 extra packages:
