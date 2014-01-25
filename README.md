@@ -14,7 +14,7 @@ they can share common endpoints).
 Provides: the query for a trapezoid which contains the given point.
 
 The current version provides only an interface for benchmarking.
-Use the command below to try it:
+Use the commands below to try it:
 
 	make
 	run_test.sh NUM_POINTS
@@ -22,5 +22,5 @@ Use the command below to try it:
 You will need the second version of python and the following
 extra packages:
 
-	* numpy
-	* scipy
+* numpy
+* scipy
