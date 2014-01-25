@@ -21,19 +21,20 @@ struct Segment
 {
 	Segment(Point pt1, Point pt2): ptLeft(pt1), ptRight(pt2) 
 	{
-		if  (ptLeft.x > ptRight.x || 
+		if  (ptLeft.x >  ptRight.x || 
 			(ptLeft.x == ptRight.x && ptLeft.y > ptRight.y))
 				std::swap(ptLeft, ptRight);
 	}
-	bool isAbove(Point p) 
-	{
-		return this->detHelper(p) > 0;
-	}
-	bool isAbove(Point pTarget, Point pGuide)
+	bool isAbove(Point pTarget, Point pGuide = Point())
 	{
 		float det = this->detHelper(pTarget);
 		if (det != 0.0f) return det > 0;
-		return this->isAbove(pGuide);
+		return this->detHelper(pGuide) > 0;
+	}
+	Point ptWithX(float x)
+	{
+		float y = ptLeft.y + (ptRight.y - ptLeft.y) / (ptRight.x - ptLeft.x) * (x - ptLeft.x);
+		return Point(x, y);
 	}
 	bool intersects(const Segment& other)
 	{
@@ -122,7 +123,7 @@ public:
 	virtual ~GraphNode() {}
 
 	virtual Trapezoid* 	getTrapezoid() 							{return nullptr;}
-	virtual GraphNode* 	nextNode(Point, Point extra = Point()) 	{return nullptr;}
+	virtual GraphNode* 	nextNode(Point, Point extra = Point()) 	{(void)extra; return nullptr;}
 	
 	void attachLeft(GraphNode* node) 
 	{

@@ -48,7 +48,7 @@ void TrapezoidMap::getTrapezoids(std::vector<Trapezoid*>& tpzds)
 		if (node->getTrapezoid()) 
 			trapSet.insert(node->getTrapezoid());
 	};
-	recHelper(_rootNode, f);	
+	recHelper(_rootNode, f);
 	std::copy(trapSet.begin(), trapSet.end(), std::back_inserter(tpzds));
 }
 
@@ -78,11 +78,6 @@ bool TrapezoidMap::validateSegments(std::vector<Segment>& segments)
 		{
 			if (seg1 == seg2) continue;
 
-			if (seg1->ptLeft.x == seg2->ptLeft.x || seg1->ptLeft.x == seg2->ptRight.x ||
-				seg1->ptRight.x == seg2->ptLeft.x || seg1->ptRight.x == seg2->ptRight.x)
-			{
-				return false;
-			}
 			if (seg1->intersects(*seg2)) return false;
 		}
 	}
@@ -94,44 +89,30 @@ void TrapezoidMap::buildMap(std::vector<Segment>& segments)
 	if (_mapReady) this->clear();
 	if (segments.size() < 2) return;
 
-	//_segments = segments;
 	_mapReady = true;
+	_segments = segments;
 
 	//bounding box
-	float minX = std::numeric_limits<float>::max();
-	float minY = std::numeric_limits<float>::max();
-	float maxX = std::numeric_limits<float>::min();
-	float maxY = std::numeric_limits<float>::min();
-
-	for (auto &segment : _segments)
-	{
-		minX = std::min(segment.ptLeft.x, minX);
-		minY = std::min(segment.minY(), minY);
-		maxX = std::max(segment.ptRight.x, maxX);
-		maxY = std::max(segment.maxY(), maxY);
-	}
+	float minX = std::numeric_limits<float>::lowest();
+	float minY = std::numeric_limits<float>::lowest();
+	float maxX = std::numeric_limits<float>::max();
+	float maxY = std::numeric_limits<float>::max();
 
 	Trapezoid* tp = new Trapezoid;
-	const float EPS = 10.0f;
-	_segments.push_back(Segment(Point(minX - EPS, maxY + EPS),
-								Point(maxX + EPS, maxY + EPS)));
+	_segments.push_back(Segment(Point(minX, maxY), Point(maxX, maxY)));
 	tp->top = &_segments.back();
-	_segments.push_back(Segment(Point(minX - EPS, minY - EPS),
-								Point(maxX + EPS, minY - EPS)));
+	_segments.push_back(Segment(Point(minX, minY), Point(maxX, minY)));
 	tp->bot = &_segments.back();
-	tp->left = Point(minX - EPS, maxY + EPS);
-	tp->right = Point(maxX + EPS, maxY - EPS);
+	tp->left = Point(minX, maxY);
+	tp->right = Point(maxX, maxY);
 
 	_rootNode = new TerminalNode(tp);
 	//end bounding box
-
 	
 	for (auto &segment : segments)
 	{
 		this->addSegment(&segment);
 	}
-	
-	std::copy(segments.begin(), segments.end(), std::back_inserter(_segments));
 }
 
 void TrapezoidMap::addSegment(Segment* segment)
@@ -222,8 +203,15 @@ namespace
 		{
 			if (tr->trRightBot)
 			{
-				//???
-				trNext = segment->isAbove(tr->trRightTop->left) ? tr->trRightBot : tr->trRightTop;
+				Point pt = segment->ptWithX(tr->trRightTop->left.x);
+				if (tr->trRightTop->bot->isAbove(pt, segment->ptLeft))
+				{
+					trNext = tr->trRightTop;
+				}
+				else
+				{ 
+					trNext = tr->trRightBot;
+				}
 			}
 			else
 			{
@@ -283,7 +271,17 @@ void TrapezoidMap::hardCase(GraphNode* pLeft, GraphNode* pRight, Segment* segmen
 	//middle intersecting
 	for (;;)
 	{
-		if (segment->isAbove(trCurrent->left))
+		bool renewTop = false;
+		if (trPrev->trRightBot && trPrev->trRightTop)
+		{
+			renewTop = (trPrev->trRightBot == trCurrent);
+		}
+		else
+		{
+			assert(trCurrent->trLeftBot == trPrev || trCurrent->trLeftTop == trPrev);
+			renewTop = (trCurrent->trLeftBot == trPrev);
+		}
+		if (renewTop)
 		{
 			trMergeTop->right = trCurrent->left;
 			Trapezoid* oldMergeTop = trMergeTop;
@@ -309,6 +307,7 @@ void TrapezoidMap::hardCase(GraphNode* pLeft, GraphNode* pRight, Segment* segmen
 		}
 		else
 		{
+			assert(trPrev->trRightTop == trCurrent);
 			trMergeBot->right = trCurrent->left;
 			Trapezoid* oldMergeBot = trMergeBot;
 			trMergeBot = new Trapezoid(*trCurrent);
